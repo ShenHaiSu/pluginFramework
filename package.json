@@ -1,0 +1,21 @@
+{
+  "name": "plugin-framework",
+  "version": "1.0.0",
+  "description": "基于TypeScript和Rollup的插件化Web框架",
+  "type": "module",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "postbuild": "node postbuild.mjs"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.8",
+    "@rollup/plugin-node-resolve": "^15.3.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.52.4",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3"
+  }
+}
