@@ -237,7 +237,7 @@ export class EventBus {
    * @returns 唯一的监听器ID
    */
   private generateListenerId(): string {
-    return `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `listener_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
