@@ -1,15 +1,29 @@
-import { emit, EventType } from "@/util/EventBus";
-import { createKeyboardEventData, createMouseEventData, COMMON_KEYBINDINGS } from "@/util/EventTypes";
 import { debug } from "@/util/logger";
+import { KeyboardListener } from "@/util/EventKeyboardListener";
+import { MouseListener } from "@/util/EventMouseListener";
+import { DomObserver, DomSelectorConfig } from "@/util/EventDomObserver";
 
 /**
  * 事件发射器 - 负责监听真实的DOM事件并通过事件总线分发
  * 这是事件总线模式的核心组件，作为统一的事件发射方
+ * 使用组合模式整合各个专门的监听器
  */
 export class EventEmitter {
   private isInitialized = false;
-  private keyboardListeners: Array<() => void> = [];
-  private mouseListeners: Array<() => void> = [];
+
+  // 各个专门的监听器
+  private keyboardListener: KeyboardListener;
+  private mouseListener: MouseListener;
+  private domObserver: DomObserver;
+
+  /**
+   * 构造函数 - 初始化各个监听器
+   */
+  constructor() {
+    this.keyboardListener = new KeyboardListener();
+    this.mouseListener = new MouseListener();
+    this.domObserver = new DomObserver();
+  }
 
   /**
    * 初始化事件发射器，设置DOM事件监听
@@ -22,124 +36,53 @@ export class EventEmitter {
 
     debug("初始化事件发射器...");
 
-    this.setupKeyboardListeners();
-    this.setupMouseListeners();
+    // 启动各个监听器
+    this.keyboardListener.start();
+    this.mouseListener.start();
+    this.domObserver.start();
 
     this.isInitialized = true;
     debug("事件发射器初始化完成");
   }
 
   /**
-   * 设置键盘事件监听器
+   * 注册DOM选择器 - 供插件调用
+   * @param config 选择器配置
    */
-  private setupKeyboardListeners(): void {
-    // 键盘按下事件
-    const keydownHandler = (event: KeyboardEvent) => {
-      emit(createKeyboardEventData(EventType.KEYDOWN, event, "EventEmitter"));
-
-      // 检查是否匹配快捷键
-      const keybinding = this.checkKeybinding(event);
-      if (keybinding) {
-        // 发射快捷键事件 - 使用自定义事件类型
-        emit({
-          type: EventType.KEYBINDING,
-          timestamp: new Date().toISOString(),
-          source: "EventEmitter",
-          data: {
-            combination: keybinding.combination,
-            action: keybinding.action,
-            originalKeyEvent: event,
-          },
-        });
-      }
-    };
-
-    // 键盘释放事件
-    const keyupHandler = (event: KeyboardEvent) => {
-      emit(createKeyboardEventData(EventType.KEYUP, event, "EventEmitter"));
-    };
-
-    // 添加事件监听器
-    document.addEventListener("keydown", keydownHandler, true);
-    document.addEventListener("keyup", keyupHandler, true);
-
-    // 保存清理函数
-    this.keyboardListeners.push(
-      () => document.removeEventListener("keydown", keydownHandler, true),
-      () => document.removeEventListener("keyup", keyupHandler, true)
-    );
-
-    debug("键盘事件监听器设置完成");
+  registerDomSelector(config: DomSelectorConfig): void {
+    this.domObserver.registerDomSelector(config);
   }
 
   /**
-   * 设置鼠标事件监听器
+   * 取消注册DOM选择器
+   * @param pluginName 插件名称
+   * @param selector 选择器（可选，不提供则清除该插件的所有选择器）
    */
-  private setupMouseListeners(): void {
-    // 鼠标移动事件
-    const mousemoveHandler = (event: MouseEvent) => {
-      emit(createMouseEventData(EventType.MOUSEMOVE, event, "EventEmitter"));
-    };
-
-    // 鼠标按下事件
-    const mousedownHandler = (event: MouseEvent) => {
-      emit(createMouseEventData(EventType.MOUSEDOWN, event, "EventEmitter"));
-    };
-
-    // 鼠标释放事件
-    const mouseupHandler = (event: MouseEvent) => {
-      emit(createMouseEventData(EventType.MOUSEUP, event, "EventEmitter"));
-    };
-
-    // 鼠标点击事件
-    const clickHandler = (event: MouseEvent) => {
-      emit(createMouseEventData(EventType.CLICK, event, "EventEmitter"));
-    };
-
-    // 鼠标双击事件
-    const dblclickHandler = (event: MouseEvent) => {
-      emit(createMouseEventData(EventType.DBLCLICK, event, "EventEmitter"));
-    };
-
-    // 添加事件监听器
-    document.addEventListener("mousemove", mousemoveHandler, true);
-    document.addEventListener("mousedown", mousedownHandler, true);
-    document.addEventListener("mouseup", mouseupHandler, true);
-    document.addEventListener("click", clickHandler, true);
-    document.addEventListener("dblclick", dblclickHandler, true);
-
-    // 保存清理函数
-    this.mouseListeners.push(
-      () => document.removeEventListener("mousemove", mousemoveHandler, true),
-      () => document.removeEventListener("mousedown", mousedownHandler, true),
-      () => document.removeEventListener("mouseup", mouseupHandler, true),
-      () => document.removeEventListener("click", clickHandler, true),
-      () => document.removeEventListener("dblclick", dblclickHandler, true)
-    );
-
-    debug("鼠标事件监听器设置完成");
+  unregisterDomSelector(pluginName: string, selector?: string): void {
+    this.domObserver.unregisterDomSelector(pluginName, selector);
   }
 
   /**
-   * 检查键盘事件是否匹配快捷键
+   * 监听选择器变更
+   * @param callback 回调函数
+   * @returns 取消监听的函数
    */
-  private checkKeybinding(event: KeyboardEvent): { combination: string; action: string } | null {
-    const modifiers: string[] = [];
-    if (event.ctrlKey) modifiers.push("Ctrl");
-    if (event.altKey) modifiers.push("Alt");
-    if (event.shiftKey) modifiers.push("Shift");
-    if (event.metaKey) modifiers.push("Meta");
+  onSelectorChange(callback: () => void): () => void {
+    return this.domObserver.onSelectorChange(callback);
+  }
 
-    const key = event.key.toUpperCase();
-    const combination = [...modifiers, key].join("+");
+  /**
+   * 获取当前注册的选择器统计信息
+   */
+  getSelectorStats(): { pluginCount: number; selectorCount: number; selectors: DomSelectorConfig[] } {
+    return this.domObserver.getSelectorStats();
+  }
 
-    // 检查常见快捷键
-    const action = (COMMON_KEYBINDINGS as any)[combination];
-    if (action) {
-      return { combination, action };
-    }
-
-    return null;
+  /**
+   * 获取初始化状态
+   */
+  isReady(): boolean {
+    return this.isInitialized;
   }
 
   /**
@@ -152,23 +95,16 @@ export class EventEmitter {
 
     debug("销毁事件发射器...");
 
-    // 清理键盘事件监听器
-    this.keyboardListeners.forEach((cleanup) => cleanup());
-    this.keyboardListeners = [];
+    // 停止各个监听器
+    this.keyboardListener.stop();
+    this.mouseListener.stop();
+    this.domObserver.stop();
 
-    // 清理鼠标事件监听器
-    this.mouseListeners.forEach((cleanup) => cleanup());
-    this.mouseListeners = [];
+    // 清理DOM观察器的选择器和回调
+    this.domObserver.clear();
 
     this.isInitialized = false;
     debug("事件发射器已销毁");
-  }
-
-  /**
-   * 获取初始化状态
-   */
-  isReady(): boolean {
-    return this.isInitialized;
   }
 }
 

@@ -151,9 +151,16 @@ export class Logger {
   }
 
   /**
-   * 格式化日志消息
+   * 格式化日志消息前缀
    */
-  private formatMessage(level: LogLevel, message: string, ...args: any[]): { fullMessage: string; levelPart: string; otherParts: string } {
+  private formatMessage(
+    level: LogLevel,
+    message: string
+  ): {
+    fullMessage: string;
+    levelPart: string;
+    otherParts: string;
+  } {
     const levelConfig = LOG_LEVEL_CONFIGS[level];
     const timestamp = this.config.enableTimestamp ? `[${this.formatTimestamp()}]` : "";
     const prefix = this.config.prefix ? `[${this.config.prefix}]` : "";
@@ -196,43 +203,47 @@ export class Logger {
   /**
    * 核心日志输出方法
    */
-  private log(level: LogLevel, message: string, ...args: any[]): void {
+  private log(level: LogLevel, ...args: any[]): void {
     if (!this.shouldLog(level)) {
       return;
     }
 
-    const messageData = this.formatMessage(level, message, ...args);
+    // 如果有参数，将第一个参数作为主消息，其余作为额外参数
+    const message = args.length > 0 ? String(args[0]) : "";
+    const restArgs = args.slice(1);
+
+    const messageData = this.formatMessage(level, message);
     const styles = this.getConsoleStyles(level);
 
-    // 根据日志级别选择合适的控制台方法
+    // 根据日志级别选择合适的控制台方法，直接将额外参数追加到输出中
     switch (level) {
       case LogLevel.DEBUG:
         if (this.config.enableColors) {
-          console.debug(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...args);
+          console.debug(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...restArgs);
         } else {
-          console.debug(messageData.fullMessage, ...args);
+          console.debug(messageData.fullMessage, ...restArgs);
         }
         break;
       case LogLevel.INFO:
         if (this.config.enableColors) {
-          console.info(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...args);
+          console.info(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...restArgs);
         } else {
-          console.info(messageData.fullMessage, ...args);
+          console.info(messageData.fullMessage, ...restArgs);
         }
         break;
       case LogLevel.WARN:
         if (this.config.enableColors) {
-          console.warn(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...args);
+          console.warn(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...restArgs);
         } else {
-          console.warn(messageData.fullMessage, ...args);
+          console.warn(messageData.fullMessage, ...restArgs);
         }
         break;
       case LogLevel.ERROR:
       case LogLevel.FATAL:
         if (this.config.enableColors) {
-          console.error(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...args);
+          console.error(messageData.otherParts, styles.levelStyle, styles.defaultStyle, ...restArgs);
         } else {
-          console.error(messageData.fullMessage, ...args);
+          console.error(messageData.fullMessage, ...restArgs);
         }
         break;
     }
@@ -241,36 +252,36 @@ export class Logger {
   /**
    * DEBUG 级别日志
    */
-  public debug(message: string, ...args: any[]): void {
-    this.log(LogLevel.DEBUG, message, ...args);
+  public debug(...args: any[]): void {
+    this.log(LogLevel.DEBUG, ...args);
   }
 
   /**
    * INFO 级别日志
    */
-  public info(message: string, ...args: any[]): void {
-    this.log(LogLevel.INFO, message, ...args);
+  public info(...args: any[]): void {
+    this.log(LogLevel.INFO, ...args);
   }
 
   /**
    * WARN 级别日志
    */
-  public warn(message: string, ...args: any[]): void {
-    this.log(LogLevel.WARN, message, ...args);
+  public warn(...args: any[]): void {
+    this.log(LogLevel.WARN, ...args);
   }
 
   /**
    * ERROR 级别日志
    */
-  public error(message: string, ...args: any[]): void {
-    this.log(LogLevel.ERROR, message, ...args);
+  public error(...args: any[]): void {
+    this.log(LogLevel.ERROR, ...args);
   }
 
   /**
    * FATAL 级别日志
    */
-  public fatal(message: string, ...args: any[]): void {
-    this.log(LogLevel.FATAL, message, ...args);
+  public fatal(...args: any[]): void {
+    this.log(LogLevel.FATAL, ...args);
   }
 
   /**
@@ -331,11 +342,11 @@ export class Logger {
 const defaultLogger = new Logger();
 
 // 导出便捷函数
-export const debug = (message: string, ...args: any[]) => defaultLogger.debug(message, ...args);
-export const info = (message: string, ...args: any[]) => defaultLogger.info(message, ...args);
-export const warn = (message: string, ...args: any[]) => defaultLogger.warn(message, ...args);
-export const error = (message: string, ...args: any[]) => defaultLogger.error(message, ...args);
-export const fatal = (message: string, ...args: any[]) => defaultLogger.fatal(message, ...args);
+export const debug = (...args: any[]) => defaultLogger.debug(...args);
+export const info = (...args: any[]) => defaultLogger.info(...args);
+export const warn = (...args: any[]) => defaultLogger.warn(...args);
+export const error = (...args: any[]) => defaultLogger.error(...args);
+export const fatal = (...args: any[]) => defaultLogger.fatal(...args);
 
 // 导出配置函数
 export const setLogLevel = (level: LogLevel) => defaultLogger.setLevel(level);

@@ -95,6 +95,23 @@ export class KeyboardPlugin extends PluginBase {
       timestamp: keyboardData.timestamp,
     };
 
+    // 将按键信息推入插件的databaseData中
+    if (!this.databaseData.keyPressHistory) this.databaseData.keyPressHistory = [];
+    this.databaseData.keyPressHistory.push({
+      key: keyboardData.data.key,
+      code: keyboardData.data.code,
+      modifiers: Array.from(this.internalData.activeModifiers),
+      timestamp: keyboardData.timestamp,
+    });
+
+    // 限制历史记录长度，例如，只保留最新的100条
+    if (this.databaseData.keyPressHistory.length > 100) {
+      this.databaseData.keyPressHistory = this.databaseData.keyPressHistory.slice(-100);
+    }
+
+    // 保存数据
+    this.saveData();
+
     debug(`键盘按下: ${keyboardData.data.key} (修饰键: ${Array.from(this.internalData.activeModifiers).join("+")})`);
   }
 
@@ -176,6 +193,7 @@ export class KeyboardPlugin extends PluginBase {
       activeModifiers: Array.from(this.internalData.activeModifiers),
       keybindings: this.databaseData.keybindings,
       actionHistory: this.databaseData.actionHistory?.slice(-10) || [],
+      keyPressHistory: this.databaseData.keyPressHistory?.slice(-10) || [],
     };
   }
 
