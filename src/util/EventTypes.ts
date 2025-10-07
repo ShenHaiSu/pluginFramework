@@ -4,6 +4,7 @@
  */
 
 import { EventType, EventData } from "@/util/EventBus";
+import { NetworkResponseData } from "@/util/EventNetworkListener";
 
 // ========== 键盘事件相关类型 ==========
 
@@ -155,15 +156,7 @@ export interface NetworkRequestEventData extends EventData {
  */
 export interface NetworkResponseEventData extends EventData {
   type: EventType.NETWORK_RESPONSE;
-  data: {
-    url: string;
-    status: number;
-    statusText: string;
-    headers?: Record<string, string>;
-    body?: string;
-    requestId: string;
-    responseTime: number; // 响应时间（毫秒）
-  };
+  data: NetworkResponseData;
 }
 
 // ========== 自定义事件相关类型 ==========
@@ -424,4 +417,19 @@ export function createMouseEventData(
     default:
       throw new Error(`不支持的鼠标事件类型: ${type}`);
   }
+}
+
+/**
+ * 创建网络响应事件数据
+ * @param responseData 网络响应数据
+ * @param source 事件来源
+ * @returns 网络响应事件数据
+ */
+export function createNetworkResponseEventData(responseData: NetworkResponseData, source?: string): NetworkResponseEventData {
+  return {
+    type: EventType.NETWORK_RESPONSE,
+    timestamp: new Date().toISOString(),
+    source: source || "NetworkListener",
+    data: responseData,
+  };
 }

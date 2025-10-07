@@ -2,6 +2,7 @@ import { debug } from "@/util/logger";
 import { KeyboardListener } from "@/util/EventKeyboardListener";
 import { MouseListener } from "@/util/EventMouseListener";
 import { DomObserver, DomSelectorConfig } from "@/util/EventDomObserver";
+import { NetworkListener } from "@/util/EventNetworkListener";
 
 /**
  * 事件发射器 - 负责监听真实的DOM事件并通过事件总线分发
@@ -15,6 +16,7 @@ export class EventEmitter {
   private keyboardListener: KeyboardListener;
   private mouseListener: MouseListener;
   private domObserver: DomObserver;
+  private networkListener: NetworkListener;
 
   /**
    * 构造函数 - 初始化各个监听器
@@ -23,6 +25,7 @@ export class EventEmitter {
     this.keyboardListener = new KeyboardListener();
     this.mouseListener = new MouseListener();
     this.domObserver = new DomObserver();
+    this.networkListener = new NetworkListener();
   }
 
   /**
@@ -40,6 +43,7 @@ export class EventEmitter {
     this.keyboardListener.start();
     this.mouseListener.start();
     this.domObserver.start();
+    this.networkListener.start();
 
     this.isInitialized = true;
     debug("事件发射器初始化完成");
@@ -99,6 +103,7 @@ export class EventEmitter {
     this.keyboardListener.stop();
     this.mouseListener.stop();
     this.domObserver.stop();
+    this.networkListener.stop();
 
     // 清理DOM观察器的选择器和回调
     this.domObserver.clear();

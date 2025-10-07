@@ -27,9 +27,7 @@ export class KeyboardListener {
    * 停止键盘事件监听
    */
   stop(): void {
-    if (!this.isActive) {
-      return;
-    }
+    if (!this.isActive) return;
 
     this.listeners.forEach((cleanup) => cleanup());
     this.listeners = [];
