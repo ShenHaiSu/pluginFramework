@@ -9,7 +9,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@/plugin/*": ["./plugin/*"],
+      "@/util/*": ["./util/*"],
+      "@/composable/*": ["./composable/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.test.ts"]

@@ -1,4 +1,4 @@
-import { installedPlugins } from "./installedPlugins";
+import { installedPlugins } from "@/util/installedPlugins";
 
 export abstract class PluginBase {
   // 插件基本信息
@@ -30,7 +30,7 @@ export abstract class PluginBase {
 
   // 保存数据到IndexedDB
   async saveData(): Promise<void> {
-    const db = await import("./db");
+    const db = await import("@/util/db");
     await db.savePluginData(this.name, this.databaseData);
   }
 

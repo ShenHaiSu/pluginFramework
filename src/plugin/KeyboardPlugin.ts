@@ -1,5 +1,5 @@
-import { PluginBase } from "../util/PluginBase";
-import { info, debug } from "../util/logger";
+import { PluginBase } from "@/util/PluginBase";
+import { info, debug } from "@/util/logger";
 
 export class KeyboardPlugin extends PluginBase {
   constructor() {
@@ -10,7 +10,7 @@ export class KeyboardPlugin extends PluginBase {
     info(`初始化 ${this.name} 插件`);
 
     // 从数据库加载保存的数据
-    const db = await import("../util/db");
+    const db = await import("@/util/db");
     const savedData = await db.getPluginData(this.name);
     if (savedData) {
       this.databaseData = savedData;

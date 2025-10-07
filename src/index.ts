@@ -1,7 +1,7 @@
-import { pluginClasses } from "./plugin";
-import { installedPlugins } from "./util/installedPlugins";
-import { getPluginData } from "./util/db";
-import { info, error } from "./util/logger";
+import { pluginClasses } from "@/plugin";
+import { installedPlugins } from "@/util/installedPlugins";
+import { getPluginData } from "@/util/db";
+import { info, error } from "@/util/logger";
 
 // 框架初始化函数
 async function initializeFramework() {

@@ -1,5 +1,5 @@
 // 数据库操作工具
-import { error } from "./logger";
+import { error } from "@/util/logger";
 
 const DB_NAME = 'PluginFrameworkDB';
 const DB_VERSION = 1;

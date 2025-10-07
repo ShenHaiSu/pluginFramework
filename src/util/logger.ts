@@ -3,6 +3,45 @@
  * 支持不同级别的日志输出，带有颜色区分和格式化
  */
 
+// 使用示例（注释形式）
+/*
+// 基本使用
+import { debug, info, warn, error, fatal } from './util/logger';
+
+debug('这是调试信息');
+info('这是普通信息');
+warn('这是警告信息');
+error('这是错误信息');
+fatal('这是致命错误');
+
+// 使用 Logger 类
+import { Logger, LogLevel } from './util/logger';
+
+const logger = new Logger({
+  level: LogLevel.DEBUG,
+  prefix: 'MyApp',
+  enableColors: true
+});
+
+logger.info('应用启动');
+logger.error('发生错误', { code: 500, message: 'Internal Server Error' });
+
+// 创建子 Logger
+const moduleLogger = logger.createChild('UserModule');
+moduleLogger.info('用户登录成功');
+
+// 分组日志
+logger.group('API 调用');
+logger.info('发送请求');
+logger.info('接收响应');
+logger.groupEnd();
+
+// 计时
+logger.time('数据处理');
+// ... 一些操作
+logger.timeEnd('数据处理');
+*/
+
 // 日志级别枚举
 export enum LogLevel {
   DEBUG = 0,
@@ -307,42 +346,3 @@ export const createLogger = (config?: Partial<LoggerConfig>) => new Logger(confi
 
 // 导出默认实例
 export default defaultLogger;
-
-// 使用示例（注释形式）
-/*
-// 基本使用
-import { debug, info, warn, error, fatal } from './util/logger';
-
-debug('这是调试信息');
-info('这是普通信息');
-warn('这是警告信息');
-error('这是错误信息');
-fatal('这是致命错误');
-
-// 使用 Logger 类
-import { Logger, LogLevel } from './util/logger';
-
-const logger = new Logger({
-  level: LogLevel.DEBUG,
-  prefix: 'MyApp',
-  enableColors: true
-});
-
-logger.info('应用启动');
-logger.error('发生错误', { code: 500, message: 'Internal Server Error' });
-
-// 创建子 Logger
-const moduleLogger = logger.createChild('UserModule');
-moduleLogger.info('用户登录成功');
-
-// 分组日志
-logger.group('API 调用');
-logger.info('发送请求');
-logger.info('接收响应');
-logger.groupEnd();
-
-// 计时
-logger.time('数据处理');
-// ... 一些操作
-logger.timeEnd('数据处理');
-*/
