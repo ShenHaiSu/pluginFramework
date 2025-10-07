@@ -1,5 +1,16 @@
 import { installedPlugins } from "@/util/installedPlugins";
 
+/**
+ * 插件构造器参数接口
+ */
+export interface PluginConfig {
+  name: string;
+  describe: string;
+  enable?: boolean;
+  canDisable?: boolean;
+  tags?: string[];
+}
+
 export abstract class PluginBase {
   // 插件基本信息
   name: string;
@@ -12,12 +23,16 @@ export abstract class PluginBase {
   internalData: Record<string, any>;
   databaseData: Record<string, any>;
 
-  constructor(name: string, describe: string, enable: boolean = true, canDisable: boolean = true, tags: string[] = []) {
-    this.name = name;
-    this.describe = describe;
-    this.enable = enable;
-    this.canDisable = canDisable;
-    this.tags = tags;
+  /**
+   * 插件基类构造器
+   * @param config 插件配置对象
+   */
+  constructor(config: PluginConfig) {
+    this.name = config.name;
+    this.describe = config.describe;
+    this.enable = config.enable ?? true;
+    this.canDisable = config.canDisable ?? true;
+    this.tags = config.tags ?? [];
     this.internalData = {};
     this.databaseData = {};
 

@@ -5,7 +5,13 @@ export class DomPlugin extends PluginBase {
   private observer: MutationObserver | null = null;
 
   constructor() {
-    super("dom", "监听DOM变化并提供DOM操作工具", true, false, ["dom", "mutation", "ui"]);
+    super({
+      name: "dom",
+      describe: "监听DOM变化并提供DOM操作工具",
+      enable: true,
+      canDisable: false,
+      tags: ["dom", "mutation", "ui"],
+    });
   }
 
   async init(): Promise<void> {

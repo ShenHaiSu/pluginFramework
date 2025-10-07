@@ -3,7 +3,13 @@ import { info, error } from "@/util/logger";
 
 export class NetworkPlugin extends PluginBase {
   constructor() {
-    super("network", "监听和拦截网络请求与响应", true, false, ["network", "request", "response"]);
+    super({
+      name: "network",
+      describe: "监听和拦截网络请求与响应",
+      enable: true,
+      canDisable: false,
+      tags: ["network", "request", "response"],
+    });
   }
 
   async init(): Promise<void> {
