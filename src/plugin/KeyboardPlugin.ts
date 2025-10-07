@@ -7,6 +7,9 @@ export class KeyboardPlugin extends PluginBase {
   private keydownListenerId: string | null = null;
   private keyupListenerId: string | null = null;
   private keybindingListenerId: string | null = null;
+  // 添加两个测试监听器的ID
+  private testListener1Id: string | null = null;
+  private testListener2Id: string | null = null;
 
   constructor() {
     super({
@@ -44,12 +47,21 @@ export class KeyboardPlugin extends PluginBase {
       "Ctrl+Z": "undo",
       "Ctrl+Y": "redo",
     };
+
+    // 初始化测试相关的数据结构
+    this.databaseData.interruptedEvents = this.databaseData.interruptedEvents || [];
+    this.databaseData.nonInterruptedEvents = this.databaseData.nonInterruptedEvents || [];
+
+    info(`${this.name} 插件初始化完成，已设置事件中断测试监听器`);
+    info(`测试说明: 按下键盘'a'键将触发事件中断机制测试`);
   }
 
   /**
    * 设置事件总线监听器
    */
   private setupEventListeners(): void {
+    info(`${this.name} 插件开始设置事件监听器`);
+
     // 监听键盘按下事件
     this.keydownListenerId = on(EventType.KEYDOWN, (eventData) => this.handleKeydown(eventData), {
       priority: EVENT_PRIORITY.NORMAL,
@@ -67,6 +79,103 @@ export class KeyboardPlugin extends PluginBase {
       priority: EVENT_PRIORITY.HIGH,
       source: this.name,
     });
+
+    // 测试监听器1 - 高优先级，监听按键'a'并中断事件传播
+    this.testListener1Id = on(EventType.KEYDOWN, (eventData) => this.handleTestListener1(eventData), {
+      priority: EVENT_PRIORITY.HIGH + 10, // 设置更高优先级确保先执行
+      source: `${this.name}_test1`,
+    });
+    info(`已注册测试监听器1 (高优先级，用于中断按键'a'事件)`);
+
+    // 测试监听器2 - 低优先级，验证事件是否被中断
+    this.testListener2Id = on(EventType.KEYDOWN, (eventData) => this.handleTestListener2(eventData), {
+      priority: EVENT_PRIORITY.LOW, // 设置低优先级确保后执行
+      source: `${this.name}_test2`,
+    });
+    info(`已注册测试监听器2 (低优先级，用于验证事件是否被中断)`);
+
+    info(`${this.name} 插件事件监听器设置完成`);
+  }
+
+  /**
+   * 测试监听器1 - 处理按键'a'并中断事件传播
+   * @param eventData 事件数据
+   * @returns 如果是按键'a'则返回true中断事件，否则返回false
+   */
+  private handleTestListener1(eventData: any): boolean {
+    if (!isKeyboardEventData(eventData)) return false;
+
+    const keyboardData = eventData as KeyboardEventData;
+
+    // 检查是否是按键'a'或'A'
+    if (keyboardData.data.key.toLowerCase() === "a") {
+      info(`[测试监听器1] 检测到按键'a'，中断事件传播`);
+
+      // 记录中断事件到数据库
+      if (!this.databaseData.interruptedEvents) {
+        this.databaseData.interruptedEvents = [];
+      }
+
+      this.databaseData.interruptedEvents.push({
+        key: keyboardData.data.key,
+        timestamp: keyboardData.timestamp,
+        listener: "testListener1",
+        action: "interrupted",
+      });
+
+      // 限制历史记录长度
+      if (this.databaseData.interruptedEvents.length > 50) {
+        this.databaseData.interruptedEvents = this.databaseData.interruptedEvents.slice(-50);
+      }
+
+      this.saveData();
+
+      // 返回true中断事件传播
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 测试监听器2 - 验证事件是否被中断
+   * @param eventData 事件数据
+   * @returns 始终返回false，不中断事件
+   */
+  private handleTestListener2(eventData: any): boolean {
+    if (!isKeyboardEventData(eventData)) return false;
+
+    const keyboardData = eventData as KeyboardEventData;
+
+    // 检查是否是按键'a'或'A'
+    if (keyboardData.data.key.toLowerCase() === "a") {
+      // 如果这个监听器被执行了，说明事件没有被中断
+      info(`[测试监听器2] 按键'a'事件未被中断，监听器2正常执行`);
+
+      // 记录未中断事件到数据库
+      if (!this.databaseData.nonInterruptedEvents) {
+        this.databaseData.nonInterruptedEvents = [];
+      }
+
+      this.databaseData.nonInterruptedEvents.push({
+        key: keyboardData.data.key,
+        timestamp: keyboardData.timestamp,
+        listener: "testListener2",
+        action: "not_interrupted",
+      });
+
+      // 限制历史记录长度
+      if (this.databaseData.nonInterruptedEvents.length > 50) {
+        this.databaseData.nonInterruptedEvents = this.databaseData.nonInterruptedEvents.slice(-50);
+      }
+
+      this.saveData();
+    } else {
+      // 对于非'a'按键，记录正常处理
+      debug(`[测试监听器2] 处理按键: ${keyboardData.data.key}`);
+    }
+
+    return false;
   }
 
   /**
@@ -187,13 +296,35 @@ export class KeyboardPlugin extends PluginBase {
    * 获取键盘统计信息
    */
   getKeyboardStats() {
-    return {
+    const stats = {
       keyPressCount: this.internalData.keyPressCount,
       lastKeyPress: this.internalData.lastKeyPress,
       activeModifiers: Array.from(this.internalData.activeModifiers),
       keybindings: this.databaseData.keybindings,
       actionHistory: this.databaseData.actionHistory?.slice(-10) || [],
       keyPressHistory: this.databaseData.keyPressHistory?.slice(-10) || [],
+      // 添加中断测试统计信息
+      interruptTestStats: this.getInterruptTestStats(),
+    };
+
+    // 输出统计信息到日志
+    info(`键盘插件统计信息:`);
+    info(`- 总按键次数: ${stats.keyPressCount}`);
+    info(`- 中断事件总数: ${stats.interruptTestStats.totalInterrupted}`);
+    info(`- 未中断事件总数: ${stats.interruptTestStats.totalNonInterrupted}`);
+
+    return stats;
+  }
+
+  /**
+   * 获取事件中断测试统计信息
+   */
+  getInterruptTestStats() {
+    return {
+      interruptedEvents: this.databaseData.interruptedEvents?.slice(-10) || [],
+      nonInterruptedEvents: this.databaseData.nonInterruptedEvents?.slice(-10) || [],
+      totalInterrupted: this.databaseData.interruptedEvents?.length || 0,
+      totalNonInterrupted: this.databaseData.nonInterruptedEvents?.length || 0,
     };
   }
 
@@ -213,6 +344,16 @@ export class KeyboardPlugin extends PluginBase {
     if (this.keybindingListenerId) {
       off(EventType.KEYBINDING, this.keybindingListenerId);
       this.keybindingListenerId = null;
+    }
+
+    // 清理测试监听器
+    if (this.testListener1Id) {
+      off(EventType.KEYDOWN, this.testListener1Id);
+      this.testListener1Id = null;
+    }
+    if (this.testListener2Id) {
+      off(EventType.KEYDOWN, this.testListener2Id);
+      this.testListener2Id = null;
     }
 
     debug(`清理 ${this.name} 插件的事件监听器`);
