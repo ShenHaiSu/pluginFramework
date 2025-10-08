@@ -11,7 +11,7 @@ export interface PluginConfig {
   tags?: string[];
 }
 
-export abstract class PluginBase {
+export abstract class PluginBase<TInternalData extends Record<string, any> = Record<string, any>, TDatabaseData extends Record<string, any> = Record<string, any>> {
   // 插件基本信息
   name: string;
   describe: string;
@@ -20,8 +20,8 @@ export abstract class PluginBase {
   tags: string[];
 
   // 数据存储
-  internalData: Record<string, any>;
-  databaseData: Record<string, any>;
+  internalData: TInternalData;
+  databaseData: TDatabaseData;
 
   /**
    * 插件基类构造器
@@ -33,8 +33,8 @@ export abstract class PluginBase {
     this.enable = config.enable ?? true;
     this.canDisable = config.canDisable ?? true;
     this.tags = config.tags ?? [];
-    this.internalData = {};
-    this.databaseData = {};
+    this.internalData = {} as TInternalData;
+    this.databaseData = {} as TDatabaseData;
 
     // 将实例推入实装插件列表
     installedPlugins.push(this);

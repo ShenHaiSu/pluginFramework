@@ -1,9 +1,11 @@
+import type { InternalData, DatabaseData } from "@/composable/SampleKeyboardPlugin/types";
+
 import { PluginBase } from "@/util/PluginBase";
 import { info, debug } from "@/util/logger";
 import { on, off, EventType } from "@/util/EventBus";
 import { isKeyboardEventData, isKeybindingEventData, KeyboardEventData, KeybindingEventData, EVENT_PRIORITY } from "@/util/EventTypes";
 
-export class KeyboardPlugin extends PluginBase {
+export class SampleKeyboardPlugin extends PluginBase<InternalData, DatabaseData> {
   private keydownListenerId: string | null = null;
   private keyupListenerId: string | null = null;
   private keybindingListenerId: string | null = null;
@@ -28,7 +30,7 @@ export class KeyboardPlugin extends PluginBase {
     const db = await import("@/util/db");
     const savedData = await db.getPluginData(this.name);
     if (savedData) {
-      this.databaseData = savedData;
+      this.databaseData = savedData as DatabaseData;
     }
 
     // 初始化内部数据
@@ -119,6 +121,7 @@ export class KeyboardPlugin extends PluginBase {
       this.databaseData.interruptedEvents.push({
         key: keyboardData.data.key,
         timestamp: keyboardData.timestamp,
+        interrupted: true,
         listener: "testListener1",
         action: "interrupted",
       });
@@ -160,6 +163,7 @@ export class KeyboardPlugin extends PluginBase {
       this.databaseData.nonInterruptedEvents.push({
         key: keyboardData.data.key,
         timestamp: keyboardData.timestamp,
+        interrupted: false,
         listener: "testListener2",
         action: "not_interrupted",
       });

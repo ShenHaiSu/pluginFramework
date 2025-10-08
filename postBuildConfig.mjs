@@ -195,8 +195,8 @@ export default {
     /**
      * iframe 支持 - 是否在 iframe 中运行脚本
      *
-     * - false: 在 iframe 中也运行（默认）
-     * - true: 不在 iframe 中运行
+     * - false: 在 iframe 中也运行
+     * - true: 不在 iframe 中运行（默认）
      *
      * @type {boolean}
      */

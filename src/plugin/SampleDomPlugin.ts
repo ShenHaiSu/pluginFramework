@@ -1,10 +1,12 @@
+import type { InternalData, DatabaseData } from "@/composable/SampleDomPlugin/types";
+
 import { PluginBase } from "@/util/PluginBase";
 import { info } from "@/util/logger";
 import { on, off, EventType } from "@/util/EventBus";
 import { DomMutationEventData, DomMutationType } from "@/util/EventTypes";
 import { eventEmitter } from "@/util/EventEmitter";
 
-export class DomPlugin extends PluginBase {
+export class SampleDomPlugin extends PluginBase<InternalData, DatabaseData> {
   private eventListenerId: string | null = null;
 
   constructor() {
@@ -12,7 +14,7 @@ export class DomPlugin extends PluginBase {
       name: "dom",
       describe: "监听DOM变化并提供DOM操作工具",
       enable: true,
-      canDisable: false,
+      canDisable: true,
       tags: ["dom", "mutation", "ui"],
     });
   }
@@ -23,9 +25,7 @@ export class DomPlugin extends PluginBase {
     // 从数据库加载保存的数据
     const db = await import("@/util/db");
     const savedData = await db.getPluginData(this.name);
-    if (savedData) {
-      this.databaseData = savedData;
-    }
+    if (savedData) this.databaseData = savedData as DatabaseData;
 
     // 初始化内部数据
     this.internalData = {
@@ -84,7 +84,9 @@ export class DomPlugin extends PluginBase {
       this.databaseData.mutationHistory = [];
     }
 
-    this.databaseData.mutationHistory.push(this.internalData.lastMutation);
+    if (this.internalData.lastMutation) {
+      this.databaseData.mutationHistory.push(this.internalData.lastMutation);
+    }
 
     // 限制历史记录长度
     if (this.databaseData.mutationHistory.length > 100) {

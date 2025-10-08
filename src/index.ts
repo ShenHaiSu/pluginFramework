@@ -1,4 +1,4 @@
-import { pluginClasses } from "@/plugin";
+import { pluginClasses } from "@/pluginEntry";
 import { installedPlugins } from "@/util/installedPlugins";
 import { getPluginData, getPluginStatus, savePluginStatus } from "@/util/db";
 import { info, error } from "@/util/logger";

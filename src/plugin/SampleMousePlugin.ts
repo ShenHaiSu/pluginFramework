@@ -1,3 +1,5 @@
+import type { InternalData, DatabaseData } from "@/composable/SampleMousePlugin/types";
+
 import { PluginBase } from "@/util/PluginBase";
 import { info, debug } from "@/util/logger";
 import { on, off, EventType } from "@/util/EventBus";
@@ -5,7 +7,7 @@ import { isMouseButtonEventData } from "@/util/EventTypes";
 import { MouseButtonEventData } from "@/util/EventTypes";
 import { EVENT_PRIORITY } from "@/util/EventTypes";
 
-export class MousePlugin extends PluginBase {
+export class SampleMousePlugin extends PluginBase<InternalData, DatabaseData> {
   private mousedownListenerId: string | null = null;
 
   constructor() {
@@ -28,7 +30,7 @@ export class MousePlugin extends PluginBase {
     const db = await import("@/util/db");
     const savedData = await db.getPluginData(this.name);
     if (savedData) {
-      this.databaseData = savedData;
+      this.databaseData = savedData as DatabaseData;
     }
 
     // 初始化内部数据

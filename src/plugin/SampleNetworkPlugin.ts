@@ -1,3 +1,5 @@
+import type { InternalData, DatabaseData } from "@/composable/SampleNetworkPlugin/types";
+
 import { PluginBase } from "@/util/PluginBase";
 import { EventBus, off, on, EventType, EventData } from "@/util/EventBus";
 import { NetworkResponseEventData } from "@/util/EventTypes";
@@ -7,7 +9,7 @@ import { info, debug } from "@/util/logger";
  * 网络响应体监听器示例插件
  * 演示如何使用网络监听器获取响应体JSON内容
  */
-export class NetworkExamplePlugin extends PluginBase {
+export class SampleNetworkPlugin extends PluginBase<InternalData, DatabaseData> {
   private eventListenerId: string | null = null;
 
   constructor() {
@@ -30,7 +32,7 @@ export class NetworkExamplePlugin extends PluginBase {
     const db = await import("@/util/db");
     const savedData = await db.getPluginData(this.name);
     if (savedData) {
-      this.databaseData = savedData;
+      this.databaseData = savedData as DatabaseData;
     }
 
     // 初始化内部数据
@@ -98,8 +100,10 @@ export class NetworkExamplePlugin extends PluginBase {
     if (data.url.includes("/api/")) {
       this.internalData.lastApiResponse = {
         url: data.url,
+        method: data.method || 'GET',
         status: data.status,
         timestamp: data.timestamp,
+        responseTime: data.responseTime || 0,
         jsonContent: data.jsonContent,
       };
     }
@@ -219,7 +223,13 @@ export class NetworkExamplePlugin extends PluginBase {
     }
 
     // 清理内部数据
-    this.internalData = {};
+    this.internalData = {
+      responseCount: 0,
+      jsonResponseCount: 0,
+      errorResponseCount: 0,
+      lastApiResponse: null,
+      userProfiles: []
+    };
 
     info(`${this.name} 插件已销毁`);
   }
